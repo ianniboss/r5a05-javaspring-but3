@@ -73,6 +73,14 @@ public class Joueur {
         this.actif = actif;
     }
 
+    public Equipe getEquipe() {
+        return equipe;
+    }
+
+    public void setEquipe(Equipe equipe) {
+        this.equipe = equipe;
+    }
+
     @Override
     public String toString() {
         return "Joueur [" + 
