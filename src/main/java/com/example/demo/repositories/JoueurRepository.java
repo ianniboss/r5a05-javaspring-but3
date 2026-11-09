@@ -4,4 +4,5 @@ import com.example.demo.models.Joueur;
 import org.springframework.data.repository.CrudRepository;
 
 public interface JoueurRepository extends CrudRepository<Joueur, Long> {
+    Iterable<Joueur> findByEquipeId(Long equipeId);
 }
