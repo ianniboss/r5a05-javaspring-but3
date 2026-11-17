@@ -5,6 +5,7 @@ import com.example.demo.repositories.EquipeRepository;
 import com.example.demo.repositories.JoueurRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -35,11 +36,13 @@ public class JoueurController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public Joueur addJoueur(@RequestBody Joueur joueur) {
         return joueurRepository.save(joueur);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Joueur> updateJoueur(@PathVariable Long id, @RequestBody Joueur details) {
         return joueurRepository.findById(id)
                 .map(joueur -> {
@@ -54,6 +57,7 @@ public class JoueurController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteJoueur(@PathVariable Long id) {
         if (!joueurRepository.existsById(id)) {
             return ResponseEntity.notFound().build();

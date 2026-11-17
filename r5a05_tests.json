@@ -1,7 +1,7 @@
 {
   "info": {
     "_postman_id": "r5a05-spring-security-jwt-tests",
-    "name": "R5A05 - Spring Security JWT Tests",
+    "name": "R5A05 - Spring Security Auth & Permissions Tests",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -60,18 +60,18 @@
       }
     },
     {
-      "name": "3. Auth - POST /auth/login",
+      "name": "3. Auth - Login as USER",
       "event": [
         {
           "listen": "test",
           "script": {
             "type": "text/javascript",
             "exec": [
-              "pm.test(\"Login successful 200 OK\", function () {",
+              "pm.test(\"Login user successful 200 OK\", function () {",
               "    pm.response.to.have.status(200);",
               "    var jsonData = pm.response.json();",
               "    pm.expect(jsonData.token).to.be.a('string');",
-              "    pm.environment.set(\"jwt_token\", jsonData.token);",
+              "    pm.environment.set(\"user_token\", jsonData.token);",
               "});"
             ]
           }
@@ -99,14 +99,14 @@
       }
     },
     {
-      "name": "4. Authenticated - GET /joueurs (Expect 200)",
+      "name": "4. Read Permission - GET /joueurs as USER (Expect 200)",
       "event": [
         {
           "listen": "test",
           "script": {
             "type": "text/javascript",
             "exec": [
-              "pm.test(\"Status code is 200 OK with Bearer Token\", function () {",
+              "pm.test(\"USER can read joueurs (200 OK)\", function () {",
               "    pm.response.to.have.status(200);",
               "});"
             ]
@@ -119,7 +119,7 @@
           "bearer": [
             {
               "key": "token",
-              "value": "{{jwt_token}}",
+              "value": "{{user_token}}",
               "type": "string"
             }
           ]
@@ -136,15 +136,15 @@
       }
     },
     {
-      "name": "5. Authenticated - GET /equipes (Expect 200)",
+      "name": "5. Write Permission - POST /joueurs as USER (Expect 403 Forbidden)",
       "event": [
         {
           "listen": "test",
           "script": {
             "type": "text/javascript",
             "exec": [
-              "pm.test(\"Status code is 200 OK with Bearer Token\", function () {",
-              "    pm.response.to.have.status(200);",
+              "pm.test(\"USER cannot create joueur (403 Forbidden)\", function () {",
+              "    pm.response.to.have.status(403);",
               "});"
             ]
           }
@@ -156,13 +156,199 @@
           "bearer": [
             {
               "key": "token",
-              "value": "{{jwt_token}}",
+              "value": "{{user_token}}",
               "type": "string"
             }
           ]
         },
-        "method": "GET",
-        "header": [],
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"nom\": \"Mbappe\",\n    \"prenom\": \"Kylian\",\n    \"poste\": \"Attaquant\",\n    \"actif\": true\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8080/joueurs",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["joueurs"]
+        }
+      }
+    },
+    {
+      "name": "6. Auth - Login as ADMIN",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Login admin successful 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.token).to.be.a('string');",
+              "    pm.environment.set(\"admin_token\", jsonData.token);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"username\": \"admin\",\n    \"password\": \"admin123\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8080/auth/login",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "7. Write Permission - POST /joueurs as ADMIN (Expect 200 OK)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"ADMIN can create joueur (200 OK)\", function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{admin_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"nom\": \"Zidane\",\n    \"prenom\": \"Zinedine\",\n    \"poste\": \"Milieu\",\n    \"actif\": true\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8080/joueurs",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["joueurs"]
+        }
+      }
+    },
+    {
+      "name": "8. Write Permission - POST /equipes as USER (Expect 403 Forbidden)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"USER cannot create equipe (403 Forbidden)\", function () {",
+              "    pm.response.to.have.status(403);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{user_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"nom\": \"Olympique de Marseille\",\n    \"ville\": \"Marseille\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8080/equipes",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["equipes"]
+        }
+      }
+    },
+    {
+      "name": "9. Write Permission - POST /equipes as ADMIN (Expect 200 OK)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"ADMIN can create equipe (200 OK)\", function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{admin_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"nom\": \"Real Madrid\",\n    \"ville\": \"Madrid\"\n}"
+        },
         "url": {
           "raw": "http://localhost:8080/equipes",
           "protocol": "http",
